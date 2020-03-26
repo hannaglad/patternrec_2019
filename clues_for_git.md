@@ -58,7 +58,7 @@ like what could be added, what could be commited,...
 
 For uploading the commited files back to github:
 ```bash
-git push
+git push name_of_your_fork
 ``` 
 
 Then, go to the patternrec_2020-samh de Hanna again. 
