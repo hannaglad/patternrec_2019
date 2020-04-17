@@ -98,143 +98,150 @@ class PR_CNN(nn.Module):
 
 # Create list of parameters we want to optimize
 lr_list = list(np.arange(0.001, 0.1, 0.001))
-batch_size_list = list(range(50,500,10))
+batch_size_list = list(range(50,1000,25))
 
 #Initialize fixed Parameters
 n_class = 10
-# Define a maximum number of epochs
 max_epochs = 150
-
-# Set variable to compare accuracy over different batch sizes
-last_batch_accuracy = 0
 
 #### Load data ####
 train_path = '~/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/train/'
-test_path = '~/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/test/'
+test_path = '~/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/val/'
 
 # Since pytorch expects a RGB image we have to transform to Grayscale. Then to tensor so it can be used by pytorch
 transform = transforms.Compose([transforms.Grayscale(), transforms.ToTensor()])
 train_data = datasets.ImageFolder(root=train_path, transform=transform)
 test_data = datasets.ImageFolder(root=test_path, transform=transform)
 
-# Cycle through batch size untill accuracy converges
-for batch_size in batch_size_list:
+# Perform 5 random intializations
+for it in range(5):
 
-    train_load = tu.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
-    test_load = tu.data.DataLoader(test_data, batch_size=batch_size, shuffle=True)
+    # Set variable to compare accuracy over different batch sizes
+    last_batch_accuracy = 0
 
-    # Set variables to comapre accuracy for different learning rates
-    final_test_accuracy = 0
-    final_train_accuracy = 0
+    # Cycle through batch size untill accuracy converges
+    for batch_size in batch_size_list:
 
-    # Cycle through learning rates untill the accuracy converges
-    for lr in lr_list:
+        train_load = tu.data.DataLoader(train_data, batch_size=batch_size, shuffle=True)
+        test_load = tu.data.DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
-        # Initialize lists to save results; will eventually be used for the plot once batch size is optimized
-        train_accuracy_per_epoch = []
-        test_accuracy_per_epoch = []
+        # Set variables to comapre accuracy for different learning rates within the batch size
+        last_test_accuracy = 0
 
-        # Make the network
-        network = PR_CNN()
-        criterion = nn.CrossEntropyLoss()
-        # Construct an optimizer for weight and bias
-        optimizer = optim.SGD(network.parameters(), lr=lr)
+        # Cycle through learning rates untill the accuracy converges
+        for lr in lr_list:
 
-        # Train the network
-        train_accuracy = 0
-        last_train_accuracy = 5
+            # Initialize lists to save results; will eventually be used for the plot once batch size is optimized
+            train_accuracy_per_epoch = []
+            test_accuracy_per_epoch = []
+            last_train_accuracy_list = []
+            last_test_accuracy_list = []
 
-        for epoch in range(max_epochs):
-            print("Batch size: {} | LR: {} | Epoch: {}".format(batch_size, lr, epoch))
-            train_total = 0
-            train_correct = 0
-            e = epoch
+            # Make the network
+            network = PR_CNN()
+            criterion = nn.CrossEntropyLoss()
+            # Construct an optimizer for weight and bias
+            optimizer = optim.SGD(network.parameters(), lr=lr)
 
-            if abs(last_train_accuracy-train_accuracy) <= 0.01:
-                print("Learning rate: {} | Train accuracy: {:.3f} | Test accuracy: {:.3f}".format(lr, train_accuracy, test_accuracy) + "\n")
-                break
+            # Train the network
+            train_accuracy = 0
+            last_train_accuracy = 5
 
-            else :
-                last_train_accuracy = train_accuracy
-                for x, (images, labels) in enumerate(train_load):
-                    # Feed the images forward through the network
-                    outputs = network(images)
-                    loss = criterion(outputs, labels)
-                    # Clear gradients
-                    optimizer.zero_grad()
-                    # Back propagation
-                    loss.backward()
-                    # Optimize and update parameters
-                    optimizer.step()
+            for epoch in range(max_epochs):
+                print("Batch size: {} | LR: {} | Epoch: {}".format(batch_size, lr, epoch))
+                train_total = 0
+                train_correct = 0
+                e = epoch
 
-                    # Calculate the number of correct predictions
-                    train_total += labels.size(0)
+                if abs(last_train_accuracy-train_accuracy) <= 0.01:
+                    print("Learning rate: {} | Train accuracy: {:.3f} | Test accuracy: {:.3f}".format(lr, train_accuracy, test_accuracy))
+                    break
 
-                    _, predicted = torch.max(outputs.data, 1)
-                    train_correct += (predicted==labels).sum().item()
+                else :
+                    last_train_accuracy = train_accuracy
 
-                # Calculate training accuracy for the epoch
-                train_accuracy = train_correct/train_total
+                    last_train_accuracy_list = train_accuracy_per_epoch
+                    last_test_accuracy_list = test_accuracy_per_epoch
 
-                # Test the network on the test data
-                network.eval()
-                with torch.no_grad():
-                    test_correct=0
-                    test_total = 0
-                    for images, labels in test_load:
-                        # Feed the images to the network
+                    for x, (images, labels) in enumerate(train_load):
+                        # Feed the images forward through the network
                         outputs = network(images)
-                        _, predicted = torch.max(outputs.data,1)
-                        test_total += labels.size(0)
-                        test_correct += (predicted==labels).sum().item()
+                        loss = criterion(outputs, labels)
+                        # Clear gradients
+                        optimizer.zero_grad()
+                        # Back propagation
+                        loss.backward()
+                        # Optimize and update parameters
+                        optimizer.step()
 
-                    # Calculate the accuracy on the test data
-                    test_accuracy = test_correct/test_total
+                        # Calculate the number of correct predictions
+                        train_total += labels.size(0)
 
-                # Add to lists of accuracy for later plots
-                train_accuracy_per_epoch.append(train_accuracy)
-                test_accuracy_per_epoch.append(test_accuracy)
+                        _, predicted = torch.max(outputs.data, 1)
+                        train_correct += (predicted==labels).sum().item()
 
+                    # Calculate training accuracy for the epoch
+                    train_accuracy = train_correct/train_total
+                    train_accuracy_per_epoch.append(train_accuracy)
 
-        if (test_accuracy-final_test_accuracy)<=0.01:
-            optimized_lr = lr
-            batch_accuracy = test_accuracy
-            print("Optimized LR for current batch size: {}".format(lr))
+                    # Test the network on the test data
+                    network.eval()
+                    with torch.no_grad():
+                        test_correct=0
+                        test_total = 0
+                        for images, labels in test_load:
+                            # Feed the images to the network
+                            outputs = network(images)
+                            _, predicted = torch.max(outputs.data,1)
+                            test_total += labels.size(0)
+                            test_correct += (predicted==labels).sum().item()
+
+                        # Calculate the accuracy on the test data
+                        test_accuracy = test_correct/test_total
+                        test_accuracy_per_epoch.append(test_accuracy)
+
+            print("Improvement for LR {:.3f}".format(test_accuracy-last_test_accuracy)+"\n")
+            if abs(test_accuracy-last_test_accuracy)<=0.01:
+                optimized_lr = lr-0.001
+                batch_accuracy = last_test_accuracy
+                print("Optimized LR for current batch size: {}".format(optimized_lr))
+                break
+            else :
+                last_test_accuracy = test_accuracy
+
+        print("Improvement for batch size {:.3f}".format(batch_accuracy-last_batch_accuracy)+"\n")
+
+        if abs(batch_accuracy-last_batch_accuracy)<=0.01:
+            optimized_batch_size = batch_size-10
+            print("Optimized batch size : {}".format(optimized_batch_size))
+            filename = "CNN_results.txt"
+            with open(filename, 'a') as file:
+                file.write("Iteration {} \nOptimized batch size {} \nOptimized learning rate {} \nFinal training accuracy {} \nFinal test accuracy {}\n\n".format(it, optimized_batch_size, optimized_lr, last_train_accuracy, last_batch_accuracy))
             break
         else :
-            print("Improvement for LR {:.3f}".format(test_accuracy-final_test_accuracy))
-            final_test_accuracy = test_accuracy
+            last_batch_accuracy = batch_accuracy
 
-    if  (batch_accuracy-last_batch_accuracy)<=0.01:
-        print("Optimized batch size : {}".format(batch_size))
-        break
-    else :
-        print("Improvement for batch size {:.3f}".format(batch_accuracy-last_batch_accuracy))
-        last_batch_accuracy = batch_accuracy
+    # Plot the results for best batch size and learning rate
+    x = list((range(e)))
 
+    image_name = "Test_acc_it_"+str(it)+".png"
+    plt.figure(1)
+    plt.plot(x, last_test_accuracy_list)
+    title = "Test accuracy per epoch at learning rate "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
+    plt.title(title)
+    plt.xlabel("Epoch")
+    plt.ylabel("Test accuracy")
+    plt.savefig(image_name)
 
-# Plot the results for best batch size and learning rate
-x = list((range(e)))
-
-image_name = "Test_acc.png"
-plt.plot(x, test_accuracy_per_epoch)
-
-title = "Test accuracy per epoch at learning rate "+str(lr)+" and batch size" + str(batch_size)
-plt.title(title)
-plt.xlabel("Learning rate")
-plt.ylabel("Test accuracy")
-plt.savefig(image_name)
-plt.show()
-
-image_name = "Train_acc.png"
-title = "Train accuracy per epoch at learning rate "+str(lr)+" and batch size" + str(batch_size)
-
-plt.plot(x, train_accuracy_per_epoch)
-plt.title(title)
-plt.xlabel("Learning rate")
-plt.ylabel("Test accuracy")
-plt.savefig(image_name)
-plt.show()
+    image_name = "Train_acc_it_"+str(it)+".png"
+    title = "Train accuracy per epoch at learning rate "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
+    plt.figure(2)
+    plt.plot(x, last_train_accuracy_list)
+    plt.title(title)
+    plt.xlabel("Epoch")
+    plt.ylabel("Train accuracy")
+    plt.savefig(image_name)
+    plt.close()
 
 # Major source
 # https://adventuresinmachinelearning.com/convolutional-neural-networks-tutorial-in-pytorch/
