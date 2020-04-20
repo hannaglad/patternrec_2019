@@ -1,4 +1,5 @@
 # Results for the SVM assignement
+(RBF kernel on subset of data) 
 For a cross-validation done by ```GridSearchCV``` from ```sklearn```, the following accuracies were got:
 
 ```params``` | mean accuracy (```mean_test_score```)
