@@ -8,15 +8,15 @@
 # optimize SVM parameters (C and gamma) by means of cross-validation
 
 # results:
-# average accuracy during cross-validation
-# for all investigating kernels and all parameters values
+# average accuracy during cross-validation for all investigating kernels and all parameters values
 # accuracy on the test set with the optimized parameter values
 
 import csv
 import numpy as np
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import GridSearchCV
+from sklearn.model_selection import GridSearchCV, ParameterGrid
+from sklearn.metrics import confusion_matrix
 
 
 def import_data(path_to_data):
@@ -48,17 +48,18 @@ if __name__ == '__main__':
     # so, the small data are reduce again:
     train_samples = train_samples[:2500, :]
     train_labels = train_labels[:2500]
-
     test_samples = test_samples[:100, :]
     test_labels = test_labels[:100]
 
-    param_grid = {'C': [0.0000001, 0.1, 100000], 'gamma': [1000, 100, 0.1], 'kernel': ['linear', 'rbf']}
+    param_grid = {'C': [1, 10, 1000], 'gamma': [0.1, 0.01, 0.0001], 'kernel': ['linear', 'poly', 'rbf']}
+    number_candidates = len(ParameterGrid(param_grid))
 
     grid = GridSearchCV(SVC(), param_grid, refit=True, verbose=2)
     grid.fit(train_samples, train_labels)
 
     predict_labels = grid.predict(test_samples)
     score = accuracy_score(test_labels, predict_labels)
+    print(confusion_matrix(test_labels, predict_labels))
 
     # results in file SVM_results.md
     with open('SVM_results.md', 'w') as f:
@@ -67,7 +68,7 @@ if __name__ == '__main__':
         f.write("```params``` | mean accuracy (```mean_test_score```)\n")
         f.write("--- | ---\n")
 
-        for i in range(18):
+        for i in range(number_candidates):
             f.write("{0} | {1}\n".format(grid.cv_results_['params'][i], grid.cv_results_['mean_test_score'][i]))
 
         f.write('\n')
