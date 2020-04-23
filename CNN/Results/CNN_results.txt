@@ -1,0 +1,42 @@
+Iteration 0 
+Optimized batch size 90 
+Optimized learning rate 0.004 
+Final training accuracy 0.8965671641791044 
+Final test accuracy 0.9157575757575758
+
+Iteration 0 
+Optimized batch size 90 
+Optimized learning rate 0.005 
+Final training accuracy 0.9182587064676617 
+Final test accuracy 0.9328282828282828
+
+Iteration 1 
+Optimized batch size 90 
+Optimized learning rate 0.005 
+Final training accuracy 0.9253980099502488 
+Final test accuracy 0.9227272727272727
+
+Iteration 2 
+Optimized batch size 100 
+Optimized learning rate 0.006 
+Final training accuracy 0.9195024875621891 
+Final test accuracy 0.9383333333333334
+
+Iteration 3 
+Optimized batch size 100 
+Optimized learning rate 0.006 
+Final training accuracy 0.9244278606965174 
+Final test accuracy 0.9201010101010101
+
+Iteration 4 
+Optimized batch size 90 
+Optimized learning rate 0.006 
+Final training accuracy 0.9254477611940298 
+Final test accuracy 0.9328282828282828
+
+Iteration 0 
+Optimized batch size 70 
+Optimized learning rate 0.005 
+Final training accuracy 0.9339054726368159 
+Final test accuracy 0.9328282828282828
+
