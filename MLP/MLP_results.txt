@@ -1,0 +1,2 @@
+Test accuracy normal data = 0.9793
+Test accuracy permuted data = 0.9671 
