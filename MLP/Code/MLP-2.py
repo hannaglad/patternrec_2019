@@ -193,8 +193,8 @@ def replicate_experiment(train,test,n,lr,tresh,miter):
     idx = np.arange(train.shape[0])
     acc = 0
     params =  None
-    trainset,trainL =train[:,1:], train[:,0]
-    valset,valL = test[:,1:],test[:,0]
+    trainset,trainL =train[:,1:]/255, train[:,0]
+    valset,valL = abs(1-test[:,1:]),test[:,0]
     # reshape the validationset and trainset so that they can be propagated all at once
     valset = np.reshape(valset,(valset.shape[0],1,valset.shape[1]))
     trainset = np.reshape(trainset,(trainset.shape[0],1,trainset.shape[1]))
@@ -221,7 +221,7 @@ def replicate_experiment(train,test,n,lr,tresh,miter):
 
         # Plot results from the training
         validation_loss,validation_acc, train_loss,train_acc = val[1],val[0],val[3],val[2]
-        title = "MLP_test_it_"+str(i)+".png"
+        title = "MLP_train_it_"+str(i)+".png"
         fig, ax = plt.subplots()
         x = list(range(len(val[2])))
         ax.plot(x, train_acc, color="green", label="Accuracy")
@@ -234,7 +234,7 @@ def replicate_experiment(train,test,n,lr,tresh,miter):
         fig.savefig(title)
 
         # Plot results from the validation
-        title = "MLP_training_it_"+str(i)+".png"
+        title = "MLP_validation_it_"+str(i)+".png"
         fig, ax = plt.subplots()
 
         ax.plot(x, validation_acc, color="green", label="Accuracy")
@@ -259,7 +259,7 @@ print("Importing data...")
 train = np.genfromtxt("mnist_train.csv", delimiter=",",dtype="float32")
 val = np.genfromtxt("val_csv.csv", delimiter=",", dtype="float32")
 test = np.genfromtxt("mnist_test.csv", delimiter=",",dtype="float32")
-results = replicate_experiment(train,val,1,0.1,0.001,40)
+results = replicate_experiment(train,val,3,0.1,0.001,40)
 
 # take the best result and try it on the test set
 network = Network()
@@ -272,7 +272,7 @@ network.add_layer(outputLayer)
 
 #Get the predicted_values
 labelsAll = np.array(test[:,0])
-test = test[:,1:]
+test = test[:,1:]/255
 predicted = network.predict(np.reshape(test,(test.shape[0],1,test.shape[1])))
 compare = predicted == labelsAll
 print(np.mean(compare))
@@ -280,4 +280,4 @@ print(np.mean(compare))
 
 filename = "MLP_results.txt"
 with open(filename, 'w') as file:
-    file.write("Test accuracy = ", np.mean(compare))
+    file.write("Test accuracy = " + str(np.mean(compare)))
