@@ -121,6 +121,7 @@ for it in range(1):
 
     # Set variable to compare accuracy over different batch sizes
     last_batch_accuracy = 0
+    batch_accuracy_list = []
 
     # Cycle through batch size untill accuracy converges
     for batch_size in batch_size_list:
@@ -162,7 +163,7 @@ for it in range(1):
                 epoch_test_loss = []
 
                 # Untill the accuracy starts stabilising for the training set, keep going through epochs
-                if abs(last_train_accuracy-train_accuracy) <= 0.01 and last_train_accuracy>=0.7:
+                if abs(last_train_accuracy-train_accuracy) <= 0.01:
                     print("Learning rate: {} | Train accuracy: {:.3f} | Test accuracy: {:.3f}".format(lr, train_accuracy, test_accuracy))
                     break
 
@@ -222,6 +223,7 @@ for it in range(1):
                         test_loss_per_epoch.append(mean_test_loss)
 
             print("Improvement for LR {:.3f}".format(test_accuracy-last_test_accuracy)+"\n")
+
             if abs(test_accuracy-last_test_accuracy)<=0.01:
                 optimized_lr = lr-0.001
                 batch_accuracy = last_test_accuracy
@@ -234,49 +236,56 @@ for it in range(1):
 
         if abs(batch_accuracy-last_batch_accuracy)<=0.01:
             optimized_batch_size = batch_size+batch_reduction
-            print("Optimized batch size : {}".format(optimized_batch_size))
-            filename = "CNN_results.txt"
-            with open(filename, 'a') as file:
-                file.write("Iteration {} \nOptimized batch size {} \nOptimized learning rate {} \nFinal training accuracy {} \nFinal test accuracy {}\n\n".format(it, optimized_batch_size, optimized_lr, last_train_accuracy, last_batch_accuracy))
-            break
+            flag = True
+            if abs(batch_accuracy-last_batch_accuracy) >=0.95:
+                break
+                print("Optimized batch size : {}".format(optimized_batch_size))
+
         else :
+            batch_accuracy_list.append(batch_accuracy)
             last_batch_accuracy = batch_accuracy
+
+    if flag == False :
+        optimized_batch_size = batch_size_list[batch_accuracy_list.index(max(batch_accuracy_list))]
+
+    print("Optimized batch size : {}".format(optimized_batch_size))
+    filename = "CNN_results.txt"
+    with open(filename, 'a') as file:
+        file.write("Iteration {} \nOptimized batch size {} \nOptimized learning rate {} \nFinal training accuracy {} \nFinal test accuracy {}\n\n".format(it, optimized_batch_size, optimized_lr, last_train_accuracy, last_batch_accuracy))
 
     # Plot the results for best batch size and learning rate
     x = list((range(e)))
 
-    image_name = "CNN_Validation_it_"+str(it)+".png"
+    image_name = "CNN_Validation_normal_it_"+str(it)+".png"
     title = "Validation Loss and Accuracy at learning rate "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
 
-    print(last_test_accuracy_list)
-    print(last_train_accuracy_list)
-
     fig, ax = plt.subplots()
-    ax.plot(x, last_test_accuracy_list, color="green", label="Accuracy")
+    ax.plot(x, last_test_accuracy_list, color="green")
     ax.set_title(title)
     ax.set_xlabel("Training epoch")
     ax.set_ylabel("Validation accuracy")
 
     ax2 = ax.twinx()
-    ax2.plot(x, test_loss_per_epoch, color="red", label="Loss")
-    ax.set_ylabel("Validation loss")
+    ax2.plot(x, test_loss_per_epoch, color="red")
+    ax2.set_ylabel("Validation loss")
+    plt.show()
     fig.savefig(image_name)
 
-    image_name = "CNN_Train_it_"+str(it)+".png"
+    image_name = "CNN_Train_normal_it_"+str(it)+".png"
     title = "Training loss and accuracy "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
     fig, ax = plt.subplots()
-    ax.plot(x, last_train_accuracy_list, color="green", label="Accuracy")
+    ax.plot(x, last_train_accuracy_list, color="green")
     ax.set_title(title)
     ax.set_xlabel("Training epoch")
     ax.set_ylabel("Training accuracy")
 
     ax2 = ax.twinx()
-    ax2.plot(x, train_loss_per_epoch, color="red", label="Loss")
-    ax.set_ylabel("Training loss")
+    ax2.plot(x, train_loss_per_epoch, color="red")
+    ax2.set_ylabel("Training loss")
     fig.savefig(image_name)
 
     # Save the model for use on test set
-    model_save_path = "/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/network/final_network"+str(it)+".pt"
+    model_save_path = "/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/network/final_network_normal"+str(it)+".pt"
     torch.save(network.state_dict(), model_save_path)
 
 # Major source

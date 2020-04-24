@@ -108,16 +108,19 @@ n_class = 10
 max_epochs = 150
 
 #### Load data ####
-train_path = '~/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/train/'
-test_path = '~/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/val/'
+train_path = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/mnist-permutated-png-format/mnist/train/'
+test_path = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/mnist-permutated-png-format/mnist/val/'
 
 # Since pytorch expects a RGB image we have to transform to Grayscale. Then to tensor so it can be used by pytorch
 transform = transforms.Compose([transforms.Grayscale(), transforms.ToTensor()])
 train_data = datasets.ImageFolder(root=train_path, transform=transform)
 test_data = datasets.ImageFolder(root=test_path, transform=transform)
 
+
+batch_accuracy_list = []
 # Perform 5 random intializations
-for it in range(1):
+for it in range(3):
+    flag = False
 
     # Set variable to compare accuracy over different batch sizes
     last_batch_accuracy = 0
@@ -235,52 +238,57 @@ for it in range(1):
 
         if abs(batch_accuracy-last_batch_accuracy)<=0.01:
             optimized_batch_size = batch_size+batch_reduction
+            flag = True
             if abs(batch_accuracy-last_batch_accuracy) >=0.95:
                 break
                 print("Optimized batch size : {}".format(optimized_batch_size))
 
         else :
+            batch_accuracy_list.append(batch_accuracy)
             last_batch_accuracy = batch_accuracy
 
-        print("Optimized batch size : {}".format(optimized_batch_size))
-        filename = "CNN_results.txt"
-        with open(filename, 'a') as file:
-            file.write("Iteration {} \nOptimized batch size {} \nOptimized learning rate {} \nFinal training accuracy {} \nFinal test accuracy {}\n\n".format(it, optimized_batch_size, optimized_lr, last_train_accuracy, last_batch_accuracy))
+    if flag == False :
+        optimized_batch_size = batch_size_list[batch_accuracy_list.index(max(batch_accuracy_list))]
 
-        # Plot the results for best batch size and learning rate
-        x = list((range(e)))
+    print("Optimized batch size : {}".format(optimized_batch_size))
+    filename = "CNN_permuted_results.txt"
+    with open(filename, 'a') as file:
+        file.write("Iteration {} \nOptimized batch size {} \nOptimized learning rate {} \nFinal training accuracy {} \nFinal test accuracy {}\n\n".format(it, optimized_batch_size, optimized_lr, last_train_accuracy, last_batch_accuracy))
 
-        image_name = "CNN_Validation_permut_it_"+str(it)+".png"
-        title = "Validation Loss and Accuracy at learning rate "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
+    # Plot the results for best batch size and learning rate
+    x = list((range(e)))
 
-        fig, ax = plt.subplots()
-        ax.plot(x, last_test_accuracy_list, color="green")
-        ax.set_title(title)
-        ax.set_xlabel("Training epoch")
-        ax.set_ylabel("Validation accuracy")
+    image_name = "CNN_Validation_permut_it_"+str(it)+".png"
+    title = "Validation Loss and Accuracy at learning rate "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
 
-        ax2 = ax.twinx()
-        ax2.plot(x, test_loss_per_epoch, color="red")
-        ax2.set_ylabel("Validation loss")
-        plt.show()
-        fig.savefig(image_name)
+    fig, ax = plt.subplots()
+    ax.plot(x, last_test_accuracy_list, color="green")
+    ax.set_title(title)
+    ax.set_xlabel("Training epoch")
+    ax.set_ylabel("Validation accuracy")
 
-        image_name = "CNN_Train_permut_it_"+str(it)+".png"
-        title = "Training loss and accuracy "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
-        fig, ax = plt.subplots()
-        ax.plot(x, last_train_accuracy_list, color="green")
-        ax.set_title(title)
-        ax.set_xlabel("Training epoch")
-        ax.set_ylabel("Training accuracy")
+    ax2 = ax.twinx()
+    ax2.plot(x, test_loss_per_epoch, color="red")
+    ax2.set_ylabel("Validation loss")
+    plt.show()
+    fig.savefig(image_name)
 
-        ax2 = ax.twinx()
-        ax2.plot(x, train_loss_per_epoch, color="red")
-        ax2.set_ylabel("Training loss")
-        fig.savefig(image_name)
+    image_name = "CNN_Train_permut_it_"+str(it)+".png"
+    title = "Training loss and accuracy "+str(optimized_lr)+" and batch size" + str(optimized_batch_size)
+    fig, ax = plt.subplots()
+    ax.plot(x, last_train_accuracy_list, color="green")
+    ax.set_title(title)
+    ax.set_xlabel("Training epoch")
+    ax.set_ylabel("Training accuracy")
 
-        # Save the model for use on test set
-        model_save_path = "/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/network/final_network_permut"+str(it)+".pt"
-        torch.save(network.state_dict(), model_save_path)
+    ax2 = ax.twinx()
+    ax2.plot(x, train_loss_per_epoch, color="red")
+    ax2.set_ylabel("Training loss")
+    fig.savefig(image_name)
+
+    # Save the model for use on test set
+    model_save_path = "/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/mnist/network/final_network_permut"+str(it)+".pt"
+    torch.save(network.state_dict(), model_save_path)
 
 # Major source
 # https://adventuresinmachinelearning.com/convolutional-neural-networks-tutorial-in-pytorch/
