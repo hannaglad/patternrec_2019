@@ -1,0 +1,1 @@
+Accuracy on the test data 0.9606
