@@ -50,9 +50,8 @@ if __name__ == '__main__':
     [test_samples, test_labels] = import_data_2(path_to_test_data)
     print("the test data were imported")
 
-    param_grid = [{ 'kernel': ['rbf'], 'C': [0.1, 1, 10, 100,1000], 'gamma': [0.0000001, 0.00001, 0.001, 0.1]},
-                  { 'kernel': ['linear'], 'C': [0.001, 1000, 10000000]},
-                  {'kernel': ['poly'], 'C': [0.001, 1000], 'gamma': [0.1, 0.01], 'degree': [2, 3]}]
+    #param_grid = [{'kernel': ['poly'], 'C': [0.001, 1000], 'gamma': [0.1, 0.01], 'degree': [2, 3]}]
+    param_grid = {'C': [0.001, 0.1, 1, 10, 1000], 'gamma': [0.1, 0.01, 0.0001, 0.000001, 0.0000001, 0.00000001], 'kernel': ['linear', 'poly', 'rbf']}
 
     grid = GridSearchCV(SVC(), param_grid, refit=True, verbose=2)
     grid.fit(train_samples, train_labels)
@@ -67,7 +66,7 @@ if __name__ == '__main__':
         f.write("```params``` | mean accuracy (```mean_test_score```)\n")
         f.write("--- | ---\n")
 
-        for i in range(18):
+        for i in range(len(grid.cv_results_['params'])):
             f.write("{0} | {1}\n".format(grid.cv_results_['params'][i], grid.cv_results_['mean_test_score'][i]))
 
         f.write('\n')
