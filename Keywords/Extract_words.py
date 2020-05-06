@@ -15,10 +15,6 @@ svgdir = rootdir+'/ground-truth/locations/'
 jpgdir = rootdir+'/images/'
 savedir = rootdir+'/cut_images/'
 
-#svg_path = 'PatRec17_KWS_Data-master/304.svg'
-#img_path = 'PatRec17_KWS_Data-master/images/304.jpg'
-#save_path = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/keywords/PatRec17_KWS_Data-master/images/304/'
-
 # Get all the files etc etc
 
 img_paths = []
@@ -44,7 +40,7 @@ for i in range(len(save_names)):
     try:
          os.mkdir(save_path)
     except :
-        continue
+        pass
 
     # Import image
     image = cv2.imread(img_path)
@@ -98,10 +94,10 @@ for i in range(len(save_names)):
         newImageArray[:,:,1] = newImageArray[:,:,1]*mask
         newImageArray[:,:,2]= newImageArray[:,:,2]*mask
 
-        plt.plot()
-        plt.imshow(newImageArray)
-        plt.savefig(name)
+        result = Image.fromarray((newImageArray).astype(np.uint8))
+        result.save(name)
 
         sys.stdout.write('\r')
         sys.stdout.write('{}/{} words extracted'.format(i,total_words))
         sys.stdout.flush()
+    sys.stdout.flush()
