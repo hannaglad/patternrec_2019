@@ -5,7 +5,6 @@ We are aware that our results (cf. Average-result.png)
 are not really good. We are not happy with them. 
 
 We really spent time trying several different ways of preprocessing 
-the images, but not yet resulted in any improvements. 
 the images, but this has not yet resulted in any improvements. 
 We especially had problems with binarization and resizing, 
 obviously this has lead to a lot of problems in feature extraction. 
