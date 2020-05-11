@@ -115,10 +115,10 @@ def compute_features(image):
             nr_between_contours[col]=np.count_nonzero(image[int(features[:,2][col]):int(features[:,3][col])+1,col])
         else:
             nr_between_contours[col]=0
-    features[:,4]=nr_between_contours
+    #features[:,4]=nr_between_contours
     #calculate the gradient change between neigbouring columns
-    filt = np.array([1,-1])
-    features[:,5] = np.convolve(features[:,3],filt,mode="same") + np.convolve(features[:,2],filt,mode="same")
+    #filt = np.array([1,-1])
+    #features[:,5] = np.convolve(features[:,3],filt,mode="same") + np.convolve(features[:,2],filt,mode="same")
     # z score normalize
     colmeans = np.mean(features,axis=0)
     colsd = np.std(features,axis=0)
@@ -183,7 +183,7 @@ if __name__=='__main__':
             word_positions = extract_polygons(svg_path)
 
             # Binarize image
-            image = filters.threshold_sauvola(image)>image
+            image = filters.threshold_otsu(image)>image
             image = image.astype(int)
 
             # Use polygon coordinates to extract each word from image
