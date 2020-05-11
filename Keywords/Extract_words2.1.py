@@ -90,16 +90,36 @@ def save_words_per_image(words_per_image, save_dir):
         image.save(save_name)
 
 def compute_features(image):
-    features = np.zeros((image.shape[1],4))
+    """takes in an binarized image and computes its features column wise
+    and z score normalizes them,assumes background black and whats represented white"""
+    # initializes an column number x feature number array
+    features = np.zeros((image.shape[1],6))
+    # count the number of white pixels
     pixel_nr = np.count_nonzero(image, axis=0)/image.shape[1]
     features[:,0] = pixel_nr
-    filt = np.array([-1,1])
+    # calculate the number of black white transitionts by convolution with a column vector
+    filt = np.array([1,-1])
     filt = np.reshape(filt,(2,1))
     nr_of_transitions = np.count_nonzero((convolve2d(image,filt,mode="valid"))**2,axis=0)
     features[:,1]=nr_of_transitions
-    crap = np.flip(image, axis=1)
+    # flip the image for the LC
+    image_flipped = np.flip(image, axis=0)
+    # get the UC and LC
     features[:,2] = np.argmax(image,axis=0)
-    features[:,3]=image.shape[1]-np.argmax(crap,axis=0)
+    features[:,3]=image.shape[1]-np.argmax(image_flipped,axis=0)
+    nr_between_contours = np.zeros((image.shape[1]))
+    # calculate the % of black pixels between contours
+    for col in range(image.shape[1]):
+        dif = features[:,3][col]-features[:,2][col]
+        if dif>0:
+            nr_between_contours[col]=np.count_nonzero(image[int(features[:,2][col]):int(features[:,3][col])+1,col])
+        else:
+            nr_between_contours[col]=0
+    features[:,4]=nr_between_contours
+    #calculate the gradient change between neigbouring columns
+    filt = np.array([1,-1])
+    features[:,5] = np.convolve(features[:,3],filt,mode="same") + np.convolve(features[:,2],filt,mode="same")
+    # z score normalize
     colmeans = np.mean(features,axis=0)
     colsd = np.std(features,axis=0)
     return (features-colmeans)/colsd
@@ -163,10 +183,8 @@ if __name__=='__main__':
             word_positions = extract_polygons(svg_path)
 
             # Binarize image
-            image = filters.threshold_otsu(image)>image
+            image = filters.threshold_sauvola(image)>image
             image = image.astype(int)
-            #image = (image*255).astype(np.uint8)
-            #img = Image.fromarray(image)
 
             # Use polygon coordinates to extract each word from image
             words_per_image = apply_mask(image, word_positions)
@@ -174,7 +192,6 @@ if __name__=='__main__':
             save_words_per_image(words_per_image, save_path)
             print("saved", i)
     ########################################
-
 
     dir_list = ['270', '271','272','273','274','275','276','277','278','279','300','301','302','303','304']
     savedir = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/keywords/PatRec17_KWS_Data-master/cut_images_test/'
@@ -189,17 +206,18 @@ if __name__=='__main__':
 
             # Crop image and resize
             cropped = image[min(trial[0]):max(trial[0])+1,min(trial[1]):max(trial[1])+1]
-            cropped = resize(cropped,(100,100), anti_aliasing=True)
+            cropped = cv2.resize(cropped,(100,100),interpolation = cv2.INTER_NEAREST)
+
 
             ### FEATURE EXTRACTION #####################
-            save_dir = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/keywords/featurestest/'
+            save_dir = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/keywords/featuresdah/'
 
             try:
                 os.mkdir(save_dir)
             except:
                 pass
 
-            save_dir = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/keywords/featurestest/'+pic+'/'
+            save_dir = '/home/hanna/Documents/UNIFR/2_semester/Pattern_recognition/Exercises/keywords/featuresdah/'+pic+'/'
 
             try:
                 os.mkdir(save_dir)
